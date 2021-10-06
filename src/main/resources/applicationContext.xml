@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--  组件扫描，排除掉controller组件，将其它所有组件加入容器  -->
+    <context:component-scan base-package="com.kgc.uzmall">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!-- 加载jdbc参数配置文件 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!-- 装配数据源 -->
+    <bean id="datasource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!--  spring整合mybatis  -->
+    <!--  1、SqlSession对象的创建和管理（交给spring），借助工厂bean  -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 数据源配置 -->
+        <property name="dataSource" ref="datasource"/>
+        <!-- 加载全局配置文件 -->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <!-- 加载SQL映射文件，默认情况是必须同名同路径，现在可以自定义路径 -->
+        <property name="mapperLocations" value="classpath:/mapper/*.xml"/>
+        <!-- 别名处理 -->
+        <property name="typeAliasesPackage" value="com.kgc.uzmall"/>
+    </bean>
+
+    <!--  2、Mapper接口的代理实现类对象创建和管理（交个spring，放入ioc容器中）
+        以前mybatis是：在单元测试中，通过sqlSession.getMapper(xxxMapper.class)
+        现在：通过MapperScannerConfigurer，自动为指定的包下的mapper接口创建代理实现类对象并放入ioc容器中
+        比如：EdocEntryMapper -》代理实现类对象 -》ioc容器中，在容器中对应的id值：edocEntryMapper
+    -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.kgc.uzmall.dao"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+
+    <!-- 装配Service -->
+    <context:component-scan base-package="com.kgc.uzmall.service"/>
+    <!-- 事务配置 -->
+    <tx:annotation-driven/>
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="datasource"/>
+    </bean>
+</beans>

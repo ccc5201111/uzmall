@@ -43,7 +43,7 @@
      <!-- 登录拦截器 -->
     <filter>
 		<filter-name>myFilter</filter-name>
-		<filter-class>com.uzykj.mall.config.ServletFilterConfig</filter-class>
+		<filter-class>com.kgc.uzmall.config.ServletFilterConfig</filter-class>
 	</filter>
 	<filter-mapping>
 		<filter-name>myFilter</filter-name>
